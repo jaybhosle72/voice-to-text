@@ -1,3 +1,11 @@
+---
+title: Voice To Text
+emoji: 🎙️
+colorFrom: purple
+colorTo: pink
+sdk: docker
+pinned: false
+---
 # 🎙️ VoiceScribe — Audio to Text
 
 > A sleek, locally-running speech-to-text web app powered by OpenAI Whisper and Flask.  
