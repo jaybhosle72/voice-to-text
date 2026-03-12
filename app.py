@@ -1,21 +1,20 @@
 import os
-import whisper
+import requests
 from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
-
-model = whisper.load_model("tiny.en")
 
 app = Flask(__name__)
 
 # Configuration
 app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max upload
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 
 ALLOWED_EXTENSIONS = {'mp3', 'wav', 'ogg', 'm4a', 'flac', 'mp4', 'webm'}
 
-# Create uploads folder if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+# 🔑 Put your Deepgram API key here
+DEEPGRAM_API_KEY = "43d713e36c21b5eb7187c309270a3345d3ed97e7"
 
 
 def allowed_file(filename):
@@ -48,24 +47,33 @@ def transcribe():
 
     try:
 
-        result = model.transcribe(filepath)
+        with open(filepath, "rb") as audio:
 
-        transcript = result['text'].strip()
-        language = result.get('language', 'unknown')
+            response = requests.post(
+                "https://api.deepgram.com/v1/listen",
+                headers={
+                    "Authorization": f"Token {DEEPGRAM_API_KEY}",
+                    "Content-Type": "application/octet-stream"
+                },
+                data=audio
+            )
+
+        result = response.json()
+
+        transcript = result["results"]["channels"][0]["alternatives"][0]["transcript"]
 
         return jsonify({
             "success": True,
             "transcript": transcript,
-            "language": language
+            "language": "auto"
         })
 
     except Exception as e:
         return jsonify({
-            "error": f"Transcription failed: {str(e)}"
+            "error": str(e)
         }), 500
 
     finally:
-        # cleanup uploaded file
         if os.path.exists(filepath):
             os.remove(filepath)
 
