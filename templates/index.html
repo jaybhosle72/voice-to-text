@@ -420,92 +420,197 @@
     }
 
     /* ── LIVE MIC ── */
-    let recognition    = null;
-    let isRecording    = false;
-    let fullTranscript = '';
+    /* ── LIVE MIC ── */
+let recognition    = null;
+let isRecording    = false;
+let fullTranscript = '';
 
-    const startBtn        = document.getElementById('startBtn');
-    const stopBtn         = document.getElementById('stopBtn');
-    const micOrb          = document.getElementById('micOrb');
-    const waveform        = document.getElementById('waveform');
-    const micStatus       = document.getElementById('micStatus');
-    const micResultCard   = document.getElementById('micResultCard');
-    const micTranscriptEl = document.getElementById('micTranscriptText');
+const startBtn        = document.getElementById('startBtn');
+const stopBtn         = document.getElementById('stopBtn');
+const micOrb          = document.getElementById('micOrb');
+const waveform        = document.getElementById('waveform');
+const micStatus       = document.getElementById('micStatus');
+const micResultCard   = document.getElementById('micResultCard');
+const micTranscriptEl = document.getElementById('micTranscriptText');
 
-    function showMicStatus(msg, type = 'info', dot = false) {
-      micStatus.className = `mic-status show ${type}`;
-      micStatus.innerHTML = dot ? `<span class="rec-dot"></span>${msg}` : `ℹ ${msg}`;
-    }
-    function hideMicStatus() { micStatus.classList.remove('show'); }
+function showMicStatus(msg, type = 'info', dot = false) {
+  micStatus.className = `mic-status show ${type}`;
+  micStatus.innerHTML = dot ? `<span class="rec-dot"></span>${msg}` : `ℹ ${msg}`;
+}
 
-    function startRecording() {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) { showMicStatus('Browser does not support live mic. Use Chrome or Edge.', 'error'); return; }
+function hideMicStatus() {
+  micStatus.classList.remove('show');
+}
 
-      recognition = new SR();
-      recognition.lang = document.getElementById('langSelect').value;
-      recognition.continuous = true;
-      recognition.interimResults = true;
+function startRecording() {
 
-      recognition.onstart = () => {
-        isRecording = true;
-        micOrb.classList.add('recording');
-        waveform.classList.add('active');
-        startBtn.disabled = true; stopBtn.disabled = false;
-        showMicStatus('Recording… speak now', 'info', true);
-      };
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-      recognition.onresult = e => {
-        let interim = '', final = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const t = e.results[i][0].transcript;
-          if (e.results[i].isFinal) final += t + ' ';
-          else interim += t;
-        }
-        if (final) fullTranscript += final;
-        micTranscriptEl.textContent = fullTranscript + interim;
-        micResultCard.classList.add('show');
-      };
+  if (!SR) {
+    showMicStatus('Browser does not support live mic. Use Chrome or Edge.', 'error');
+    return;
+  }
 
-      recognition.onerror = e => {
-        if (e.error === 'not-allowed') showMicStatus('⚠ Microphone access denied. Please allow mic permission.', 'error');
-        else if (e.error === 'no-speech') showMicStatus('No speech detected. Try again.', 'error');
-        else showMicStatus(`Error: ${e.error}`, 'error');
-        stopRecording();
-      };
+  recognition = new SR();
 
-      recognition.onend = () => { if (isRecording) recognition.start(); };
-      recognition.start();
-    }
+  recognition.lang = document.getElementById('langSelect').value;
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
 
-    function stopRecording() {
-      isRecording = false;
-      if (recognition) { recognition.onend = null; recognition.stop(); recognition = null; }
-      micOrb.classList.remove('recording');
-      waveform.classList.remove('active');
-      startBtn.disabled = false; stopBtn.disabled = true;
-      if (fullTranscript) showMicStatus('Recording stopped. Transcript ready!', 'success');
-      else hideMicStatus();
-    }
+  recognition.onstart = () => {
+    isRecording = true;
 
-    function copyMicText(btn) {
-      navigator.clipboard.writeText(micTranscriptEl.textContent).then(() => {
-        btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = '⎘ Copy', 2000);
-      });
+    micOrb.classList.add('recording');
+    waveform.classList.add('active');
+
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+
+    showMicStatus('Recording… speak now', 'info', true);
+  };
+
+  recognition.onresult = e => {
+
+    let interim = '';
+    let final = '';
+
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+
+      const text = e.results[i][0].transcript;
+
+      if (e.results[i].isFinal) {
+        final += text + " ";
+      } else {
+        interim += text;
+      }
+
     }
 
-    function clearMicText() {
-      fullTranscript = ''; micTranscriptEl.textContent = '';
-      micResultCard.classList.remove('show'); hideMicStatus();
+    if (final) {
+      fullTranscript += final;
     }
 
-    function downloadMicTxt() {
-      const text = micTranscriptEl.textContent;
-      if (!text) return;
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
-      a.download = 'live-transcript.txt'; a.click();
+    micTranscriptEl.textContent = fullTranscript + interim;
+
+    micResultCard.classList.add('show');
+
+  };
+
+  recognition.onerror = e => {
+
+    if (e.error === "not-allowed") {
+
+      showMicStatus("⚠ Microphone permission denied.", "error");
+      stopRecording();
+      return;
+
     }
+
+    if (e.error === "network") {
+
+      console.log("Network glitch, restarting recognition...");
+      return;
+
+    }
+
+    if (e.error === "no-speech") {
+
+      console.log("No speech detected — continuing...");
+      return;
+
+    }
+
+    console.log("Speech recognition error:", e.error);
+
+  };
+
+  recognition.onend = () => {
+
+    if (isRecording) {
+
+      try {
+
+        recognition.start();
+
+      } catch (err) {
+
+        console.log("Restart prevented:", err);
+
+      }
+
+    }
+
+  };
+
+  recognition.start();
+
+}
+
+function stopRecording() {
+
+  isRecording = false;
+
+  if (recognition) {
+    recognition.onend = null;
+    recognition.stop();
+    recognition = null;
+  }
+
+  micOrb.classList.remove('recording');
+  waveform.classList.remove('active');
+
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+
+  if (fullTranscript) {
+    showMicStatus('Recording stopped. Transcript ready!', 'success');
+  } else {
+    hideMicStatus();
+  }
+
+}
+
+function copyMicText(btn) {
+
+  navigator.clipboard.writeText(micTranscriptEl.textContent).then(() => {
+
+    btn.textContent = "✓ Copied!";
+
+    setTimeout(() => {
+      btn.textContent = "⎘ Copy";
+    }, 2000);
+
+  });
+
+}
+
+function clearMicText() {
+
+  fullTranscript = "";
+  micTranscriptEl.textContent = "";
+
+  micResultCard.classList.remove('show');
+
+  hideMicStatus();
+
+}
+
+function downloadMicTxt() {
+
+  const text = micTranscriptEl.textContent;
+
+  if (!text) return;
+
+  const a = document.createElement('a');
+
+  a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+
+  a.download = "live-transcript.txt";
+
+  a.click();
+
+}
   </script>
 </body>
 </html>
