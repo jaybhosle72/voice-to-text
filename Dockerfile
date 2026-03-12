@@ -6,15 +6,7 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir flask gunicorn werkzeug
-
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
-    --no-deps
-
-RUN pip install --no-cache-dir tqdm more-itertools regex numpy \
-    tiktoken numba
-
-RUN pip install --no-cache-dir openai-whisper --no-deps
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
