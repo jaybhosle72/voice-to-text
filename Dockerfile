@@ -12,9 +12,10 @@ RUN pip install --no-cache-dir flask gunicorn werkzeug
 
 RUN pip install --no-cache-dir openai-whisper --no-deps
 
-RUN pip install --no-cache-dir numba numpy torch torchaudio \
+RUN pip install --no-cache-dir numpy torch torchaudio \
     --index-url https://download.pytorch.org/whl/cpu
 
+RUN pip install --no-cache-dir numba
 COPY . .
 
 RUN mkdir -p uploads
