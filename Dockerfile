@@ -10,7 +10,7 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir flask gunicorn werkzeug
 
-RUN pip install --no-cache-dir openai-whisper --no-deps
+RUN pip install --no-cache-dir openai-whisper
 
 RUN pip install --no-cache-dir numpy torch torchaudio \
     --index-url https://download.pytorch.org/whl/cpu
