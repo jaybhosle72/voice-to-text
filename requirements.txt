@@ -1,11 +1,5 @@
 flask==3.0.0
-openai-whisper
-torch
 gunicorn
-typing_extensions>=4.8.0
-ffmpeg-python
-numpy
-tqdm
-
-
+deepgram-sdk
+requests
 
