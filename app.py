@@ -11,7 +11,7 @@ ALLOWED_EXTENSIONS = {'mp3', 'wav', 'ogg', 'm4a', 'flac', 'mp4', 'webm'}
 
 os.makedirs('uploads', exist_ok=True)
 
-model = whisper.load_model("base")
+model = whisper.load_model("tiny")
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
