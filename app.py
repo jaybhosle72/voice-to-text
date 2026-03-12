@@ -1,6 +1,9 @@
 import os
+import whisper
 from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
+
+model = whisper.load_model("tiny.en")
 
 app = Flask(__name__)
 
@@ -13,9 +16,6 @@ ALLOWED_EXTENSIONS = {'mp3', 'wav', 'ogg', 'm4a', 'flac', 'mp4', 'webm'}
 # Create uploads folder if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# Lazy-loaded model
-import whisper
-model = whisper.load_model("tiny.en")
 
 
 def allowed_file(filename):
@@ -47,7 +47,6 @@ def transcribe():
     file.save(filepath)
 
     try:
-        model = get_model()
 
         result = model.transcribe(filepath)
 
