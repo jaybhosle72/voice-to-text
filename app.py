@@ -14,14 +14,8 @@ ALLOWED_EXTENSIONS = {'mp3', 'wav', 'ogg', 'm4a', 'flac', 'mp4', 'webm'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Lazy-loaded model
-model = None
-
-def get_model():
-    global model
-    if model is None:
-        import whisper
-        model = whisper.load_model("tiny")
-    return model
+import whisper
+model = whisper.load_model("tiny.en")
 
 
 def allowed_file(filename):
