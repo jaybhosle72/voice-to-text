@@ -251,7 +251,7 @@
   <div class="container">
 
     <header>
-      <div class="logo-tag">⚡ Powered by Whisper AI</div>
+      <div class="logo-tag">⚡ Powered by deepgram</div>
       <h1>VoiceScribe</h1>
       <p class="subtitle">// mic input · audio files · instant transcript</p>
     </header>
@@ -470,32 +470,31 @@ function startRecording() {
     showMicStatus('Recording… speak now', 'info', true);
   };
 
-  recognition.onresult = e => {
+  recognition.onresult = (event) => {
 
-    let interim = '';
-    let final = '';
+let interimTranscript = ""
 
-    for (let i = e.resultIndex; i < e.results.length; i++) {
+for (let i = event.resultIndex; i < event.results.length; i++) {
 
-      const text = e.results[i][0].transcript;
+    const transcript = event.results[i][0].transcript.trim()
 
-      if (e.results[i].isFinal) {
-        final += text + " ";
-      } else {
-        interim += text;
-      }
+    if (event.results[i].isFinal) {
 
+        // prevent duplicate final text
+        if (!finalTranscript.endsWith(transcript)) {
+            finalTranscript += transcript + " "
+        }
+
+    } else {
+
+        interimTranscript += transcript
     }
 
-    if (final) {
-      fullTranscript += final;
-    }
+}
 
-    micTranscriptEl.textContent = fullTranscript + interim;
+document.getElementById("micText").value = finalTranscript + interimTranscript
 
-    micResultCard.classList.add('show');
-
-  };
+};
 
   recognition.onerror = e => {
 
