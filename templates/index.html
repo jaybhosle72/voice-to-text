@@ -459,6 +459,7 @@ function startRecording() {
   recognition.maxAlternatives = 1;
 
   recognition.onstart = () => {
+
     isRecording = true;
 
     micOrb.classList.add('recording');
@@ -468,56 +469,53 @@ function startRecording() {
     stopBtn.disabled = false;
 
     showMicStatus('Recording… speak now', 'info', true);
+
   };
 
-  recognition.onresult = (event) => {
+  recognition.onresult = function(event) {
 
-let interimTranscript = ""
+    let interimTranscript = "";
 
-for (let i = event.resultIndex; i < event.results.length; i++) {
+    for (let i = event.resultIndex; i < event.results.length; i++) {
 
-    const transcript = event.results[i][0].transcript.trim()
+      const transcript = event.results[i][0].transcript.trim();
 
-    if (event.results[i].isFinal) {
+      if (event.results[i].isFinal) {
 
-        // prevent duplicate final text
-        if (!finalTranscript.endsWith(transcript)) {
-            finalTranscript += transcript + " "
+        // prevent duplicate phrases (mobile bug)
+        if (!fullTranscript.endsWith(transcript)) {
+          fullTranscript += transcript + " ";
         }
 
-    } else {
+      } else {
 
-        interimTranscript += transcript
+        interimTranscript += transcript;
+
+      }
+
     }
 
-}
+    micTranscriptEl.textContent = fullTranscript + interimTranscript;
+    micResultCard.classList.add("show");
 
-document.getElementById("micText").value = finalTranscript + interimTranscript
+  };
 
-};
-
-  recognition.onerror = e => {
+  recognition.onerror = (e) => {
 
     if (e.error === "not-allowed") {
-
       showMicStatus("⚠ Microphone permission denied.", "error");
       stopRecording();
       return;
-
-    }
-
-    if (e.error === "network") {
-
-      console.log("Network glitch, restarting recognition...");
-      return;
-
     }
 
     if (e.error === "no-speech") {
-
       console.log("No speech detected — continuing...");
       return;
+    }
 
+    if (e.error === "network") {
+      console.log("Network issue — continuing...");
+      return;
     }
 
     console.log("Speech recognition error:", e.error);
@@ -527,17 +525,11 @@ document.getElementById("micText").value = finalTranscript + interimTranscript
   recognition.onend = () => {
 
     if (isRecording) {
-
       try {
-
         recognition.start();
-
       } catch (err) {
-
         console.log("Restart prevented:", err);
-
       }
-
     }
 
   };
